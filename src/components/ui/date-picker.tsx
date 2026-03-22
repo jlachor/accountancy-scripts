@@ -35,6 +35,8 @@ export function DatePicker({ value, onChange, placeholder = "Wybierz datę" }: D
           onSelect={onChange}
           weekStartsOn={1}
           locale={pl}
+          disabled={{ after: new Date() }}
+          captionLayout="dropdown"
         />
       </PopoverContent>
     </Popover>
