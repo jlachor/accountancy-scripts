@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Plus, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
+import { fetchExchangeRate, type CurrencyCode } from '@/lib/nbp-api'
 
 interface LineItem {
   id: string
   date?: Date
   amount: string
   rate: string
+  rateDate?: string
 }
 
 function createEmptyLine(): LineItem {
@@ -17,6 +20,7 @@ function createEmptyLine(): LineItem {
     date: undefined,
     amount: '',
     rate: '',
+    rateDate: undefined,
   }
 }
 
@@ -31,13 +35,83 @@ function formatPln(value: number): string {
   return value.toFixed(2)
 }
 
+interface LineItemRowProps {
+  line: LineItem
+  currency: CurrencyCode
+  onUpdate: (updates: Partial<LineItem>) => void
+  onRemove: () => void
+}
+
+function LineItemRow({ line, currency, onUpdate, onRemove }: LineItemRowProps) {
+  const { isFetching, isError } = useQuery({
+    queryKey: ['exchangeRate', currency, line.date?.toISOString()],
+    queryFn: async () => {
+      const result = await fetchExchangeRate(currency, line.date!)
+      onUpdate({
+        rate: result.rate.toFixed(4),
+        rateDate: result.effectiveDate,
+      })
+      return result
+    },
+    enabled: !!line.date,
+    staleTime: Infinity,
+  })
+
+  const plnValue = calculatePln(line.amount, line.rate)
+
+  return (
+    <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 items-center">
+      <DatePicker
+        value={line.date}
+        onChange={(date) => onUpdate({ date, rate: '', rateDate: undefined })}
+      />
+      <Input
+        type="number"
+        step="0.01"
+        placeholder="0.00"
+        value={line.amount}
+        onChange={(e) => onUpdate({ amount: e.target.value })}
+      />
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <Input
+            type="text"
+            value={line.rate}
+            readOnly
+            placeholder={isFetching ? '...' : '0.0000'}
+            className={`w-24 bg-muted/50 cursor-default ${isError ? 'border-destructive' : ''}`}
+          />
+          {isFetching && (
+            <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+        </div>
+        {line.rateDate && (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            ({line.rateDate})
+          </span>
+        )}
+      </div>
+      <span className="text-right font-mono">{formatPln(plnValue)}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRemove}
+        className="text-destructive hover:text-destructive"
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+
 interface CurrencySectionProps {
   title: string
+  currency: CurrencyCode
   lines: LineItem[]
   onLinesChange: (lines: LineItem[]) => void
 }
 
-function CurrencySection({ title, lines, onLinesChange }: CurrencySectionProps) {
+function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySectionProps) {
   const addLine = () => {
     onLinesChange([...lines, createEmptyLine()])
   }
@@ -73,51 +147,23 @@ function CurrencySection({ title, lines, onLinesChange }: CurrencySectionProps) 
         </p>
       ) : (
         <div className="space-y-2">
-          <div className="grid grid-cols-[140px_120px_120px_100px_40px] gap-2 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 text-sm font-medium text-muted-foreground">
             <span>Date</span>
             <span>Amount</span>
-            <span>Rate</span>
+            <span>Rate (from)</span>
             <span>PLN</span>
             <span></span>
           </div>
-          {lines.map((line) => {
-            const plnValue = calculatePln(line.amount, line.rate)
-            return (
-              <div
-                key={line.id}
-                className="grid grid-cols-[140px_120px_120px_100px_40px] gap-2 items-center"
-              >
-                <DatePicker
-                  value={line.date}
-                  onChange={(date) => updateLine(line.id, { date })}
-                />
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={line.amount}
-                  onChange={(e) => updateLine(line.id, { amount: e.target.value })}
-                />
-                <Input
-                  type="number"
-                  step="0.0001"
-                  placeholder="0.0000"
-                  value={line.rate}
-                  onChange={(e) => updateLine(line.id, { rate: e.target.value })}
-                />
-                <span className="text-right font-mono">{formatPln(plnValue)}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeLine(line.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            )
-          })}
-          <div className="grid grid-cols-[140px_120px_120px_100px_40px] gap-2 pt-2 border-t">
+          {lines.map((line) => (
+            <LineItemRow
+              key={line.id}
+              line={line}
+              currency={currency}
+              onUpdate={(updates) => updateLine(line.id, updates)}
+              onRemove={() => removeLine(line.id)}
+            />
+          ))}
+          <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 pt-2 border-t">
             <span></span>
             <span></span>
             <span className="text-right font-medium">Total:</span>
@@ -156,12 +202,14 @@ export function CurrencyToPln() {
       <div className="space-y-6">
         <CurrencySection
           title="USD"
+          currency="USD"
           lines={usdLines}
           onLinesChange={setUsdLines}
         />
 
         <CurrencySection
           title="EUR"
+          currency="EUR"
           lines={eurLines}
           onLinesChange={setEurLines}
         />
