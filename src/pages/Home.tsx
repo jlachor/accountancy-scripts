@@ -7,8 +7,7 @@ interface Script {
 }
 
 const scripts: Script[] = [
-  // Add your scripts here as you create them
-  // { name: 'Currency Converter', path: '/currency-converter', description: 'Convert between currencies' },
+  { name: 'Currency to PLN', path: '/currency-to-pln', description: 'Convert USD and EUR amounts to PLN using exchange rates' },
 ]
 
 export function Home() {

@@ -1,0 +1,180 @@
+import { useState } from 'react'
+import { Plus, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
+
+interface LineItem {
+  id: string
+  date?: Date
+  amount: string
+  rate: string
+}
+
+function createEmptyLine(): LineItem {
+  return {
+    id: crypto.randomUUID(),
+    date: undefined,
+    amount: '',
+    rate: '',
+  }
+}
+
+function calculatePln(amount: string, rate: string): number {
+  const amountNum = parseFloat(amount)
+  const rateNum = parseFloat(rate)
+  if (isNaN(amountNum) || isNaN(rateNum)) return 0
+  return Math.round(amountNum * rateNum * 100) / 100
+}
+
+function formatPln(value: number): string {
+  return value.toFixed(2)
+}
+
+interface CurrencySectionProps {
+  title: string
+  lines: LineItem[]
+  onLinesChange: (lines: LineItem[]) => void
+}
+
+function CurrencySection({ title, lines, onLinesChange }: CurrencySectionProps) {
+  const addLine = () => {
+    onLinesChange([...lines, createEmptyLine()])
+  }
+
+  const removeLine = (id: string) => {
+    onLinesChange(lines.filter((line) => line.id !== id))
+  }
+
+  const updateLine = (id: string, updates: Partial<LineItem>) => {
+    onLinesChange(
+      lines.map((line) => (line.id === id ? { ...line, ...updates } : line))
+    )
+  }
+
+  const sectionTotal = lines.reduce(
+    (sum, line) => sum + calculatePln(line.amount, line.rate),
+    0
+  )
+
+  return (
+    <div className="border rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <Button variant="outline" size="sm" onClick={addLine}>
+          <Plus className="h-4 w-4 mr-1" />
+          Add
+        </Button>
+      </div>
+
+      {lines.length === 0 ? (
+        <p className="text-muted-foreground text-sm italic">
+          No entries. Click "Add" to add a line.
+        </p>
+      ) : (
+        <div className="space-y-2">
+          <div className="grid grid-cols-[140px_120px_120px_100px_40px] gap-2 text-sm font-medium text-muted-foreground">
+            <span>Date</span>
+            <span>Amount</span>
+            <span>Rate</span>
+            <span>PLN</span>
+            <span></span>
+          </div>
+          {lines.map((line) => {
+            const plnValue = calculatePln(line.amount, line.rate)
+            return (
+              <div
+                key={line.id}
+                className="grid grid-cols-[140px_120px_120px_100px_40px] gap-2 items-center"
+              >
+                <DatePicker
+                  value={line.date}
+                  onChange={(date) => updateLine(line.id, { date })}
+                />
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={line.amount}
+                  onChange={(e) => updateLine(line.id, { amount: e.target.value })}
+                />
+                <Input
+                  type="number"
+                  step="0.0001"
+                  placeholder="0.0000"
+                  value={line.rate}
+                  onChange={(e) => updateLine(line.id, { rate: e.target.value })}
+                />
+                <span className="text-right font-mono">{formatPln(plnValue)}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeLine(line.id)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )
+          })}
+          <div className="grid grid-cols-[140px_120px_120px_100px_40px] gap-2 pt-2 border-t">
+            <span></span>
+            <span></span>
+            <span className="text-right font-medium">Total:</span>
+            <span className="text-right font-mono font-semibold">
+              {formatPln(sectionTotal)}
+            </span>
+            <span></span>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function CurrencyToPln() {
+  const [usdLines, setUsdLines] = useState<LineItem[]>([])
+  const [eurLines, setEurLines] = useState<LineItem[]>([])
+
+  const usdTotal = usdLines.reduce(
+    (sum, line) => sum + calculatePln(line.amount, line.rate),
+    0
+  )
+  const eurTotal = eurLines.reduce(
+    (sum, line) => sum + calculatePln(line.amount, line.rate),
+    0
+  )
+  const grandTotal = usdTotal + eurTotal
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Currency to PLN</h1>
+      <p className="text-muted-foreground mb-8">
+        Convert USD and EUR amounts to PLN using exchange rates.
+      </p>
+
+      <div className="space-y-6">
+        <CurrencySection
+          title="USD"
+          lines={usdLines}
+          onLinesChange={setUsdLines}
+        />
+
+        <CurrencySection
+          title="EUR"
+          lines={eurLines}
+          onLinesChange={setEurLines}
+        />
+
+        <div className="border rounded-lg p-4 bg-muted/50">
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-semibold">Grand Total (PLN)</span>
+            <span className="text-2xl font-mono font-bold">
+              {formatPln(grandTotal)}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
