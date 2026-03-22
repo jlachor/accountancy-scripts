@@ -6,7 +6,7 @@ export function MainLayout() {
       <header className="border-b">
         <nav className="container mx-auto px-4 py-4">
           <Link to="/" className="text-xl font-semibold">
-            Accountancy Scripts
+            Narzędzia księgowe
           </Link>
         </nav>
       </header>
@@ -16,7 +16,7 @@ export function MainLayout() {
       </main>
 
       <footer className="border-t py-4 text-center text-sm text-muted-foreground">
-        Accountancy Scripts
+        Narzędzia księgowe
       </footer>
     </div>
   )

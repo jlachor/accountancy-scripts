@@ -1,4 +1,5 @@
 import { format } from "date-fns"
+import { pl } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -15,7 +16,7 @@ interface DatePickerProps {
   placeholder?: string
 }
 
-export function DatePicker({ value, onChange, placeholder = "Pick a date" }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder = "Wybierz datę" }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger
@@ -32,6 +33,8 @@ export function DatePicker({ value, onChange, placeholder = "Pick a date" }: Dat
           mode="single"
           selected={value}
           onSelect={onChange}
+          weekStartsOn={1}
+          locale={pl}
         />
       </PopoverContent>
     </Popover>

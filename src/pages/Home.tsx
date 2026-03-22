@@ -7,15 +7,15 @@ interface Script {
 }
 
 const scripts: Script[] = [
-  { name: 'Currency to PLN', path: '/currency-to-pln', description: 'Convert USD and EUR amounts to PLN using exchange rates' },
+  { name: 'Przelicznik walut na PLN', path: '/currency-to-pln', description: 'Przelicz kwoty w USD i EUR na PLN według kursów wymiany' },
 ]
 
 export function Home() {
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Accountancy Scripts</h1>
+      <h1 className="text-3xl font-bold mb-6">Narzędzia księgowe</h1>
       <p className="text-muted-foreground mb-8">
-        A collection of simple tools for accountancy tasks.
+        Zbiór prostych narzędzi do zadań księgowych.
       </p>
 
       {scripts.length > 0 ? (
@@ -33,7 +33,7 @@ export function Home() {
         </div>
       ) : (
         <p className="text-muted-foreground italic">
-          No scripts yet. Add your first script to get started.
+          Brak narzędzi. Dodaj pierwsze narzędzie, aby rozpocząć.
         </p>
       )}
     </div>

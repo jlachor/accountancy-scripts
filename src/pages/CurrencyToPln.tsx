@@ -137,20 +137,20 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
         <h2 className="text-xl font-semibold">{title}</h2>
         <Button variant="outline" size="sm" onClick={addLine}>
           <Plus className="h-4 w-4 mr-1" />
-          Add
+          Dodaj
         </Button>
       </div>
 
       {lines.length === 0 ? (
         <p className="text-muted-foreground text-sm italic">
-          No entries. Click "Add" to add a line.
+          Brak wpisów. Kliknij „Dodaj", aby dodać wiersz.
         </p>
       ) : (
         <div className="space-y-2">
           <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 text-sm font-medium text-muted-foreground">
-            <span>Date</span>
-            <span>Amount</span>
-            <span>Rate (from)</span>
+            <span>Data</span>
+            <span>Kwota</span>
+            <span>Kurs (z dnia)</span>
             <span>PLN</span>
             <span></span>
           </div>
@@ -166,7 +166,7 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
           <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 pt-2 border-t">
             <span></span>
             <span></span>
-            <span className="text-right font-medium">Total:</span>
+            <span className="text-right font-medium">Suma:</span>
             <span className="text-right font-mono font-semibold">
               {formatPln(sectionTotal)}
             </span>
@@ -194,9 +194,9 @@ export function CurrencyToPln() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-6">Currency to PLN</h1>
+      <h1 className="text-3xl font-bold mb-6">Przelicznik walut na PLN</h1>
       <p className="text-muted-foreground mb-8">
-        Convert USD and EUR amounts to PLN using exchange rates.
+        Przelicz kwoty w USD i EUR na PLN według kursów wymiany.
       </p>
 
       <div className="space-y-6">
@@ -216,7 +216,7 @@ export function CurrencyToPln() {
 
         <div className="border rounded-lg p-4 bg-muted/50">
           <div className="flex justify-between items-center">
-            <span className="text-lg font-semibold">Grand Total (PLN)</span>
+            <span className="text-lg font-semibold">Suma całkowita (PLN)</span>
             <span className="text-2xl font-mono font-bold">
               {formatPln(grandTotal)}
             </span>
