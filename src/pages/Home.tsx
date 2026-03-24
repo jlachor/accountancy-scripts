@@ -9,6 +9,7 @@ interface Script {
 const scripts: Script[] = [
   { name: 'Przelicznik walut na PLN', path: '/currency-to-pln', description: 'Przelicz kwoty w USD i EUR na PLN według kursów wymiany' },
   { name: 'Różnica kursowa', path: '/exchange-rate-difference', description: 'Oblicz różnicę kursową między wartością obliczoną a kwotą zapłaty' },
+  { name: 'VAT Marża', path: '/vat-marza', description: 'Oblicz wartość sprzedaży do KPiR na podstawie procedury VAT marża' },
 ]
 
 export function Home() {
