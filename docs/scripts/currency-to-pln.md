@@ -25,7 +25,9 @@ Accounting tool for converting foreign currency transactions to PLN for bookkeep
 - **Grand total** - sum of USD section + EUR section
 
 ## User Interactions
-- Click **+** button to add a new line to a section
+- Click **Dodaj** button to add a new line to a section
+- Click **Clone** button (copy icon) to duplicate a line
+- Click **Delete** button (trash icon) to remove a line
 - All PLN values recalculate automatically when inputs change
 - Standard rounding to 2 decimal places for PLN values
 

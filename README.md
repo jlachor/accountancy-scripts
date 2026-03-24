@@ -12,7 +12,8 @@ A collection of accounting tools and calculators built with React + TypeScript.
 
 | Script | Description | Status |
 |--------|-------------|--------|
-| [Currency to PLN](docs/scripts/currency-to-pln.md) | Convert USD/EUR to PLN with exchange rates | In Progress |
+| [Currency to PLN](docs/scripts/currency-to-pln.md) | Convert USD/EUR to PLN with exchange rates | Done |
+| [Exchange Rate Difference](docs/scripts/exchange-rate-difference.md) | Calculate exchange rate differences between calculated and actual payment | Done |
 
 ## Development
 
