@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Loader2, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -39,10 +39,11 @@ interface LineItemRowProps {
   line: LineItem
   currency: CurrencyCode
   onUpdate: (updates: Partial<LineItem>) => void
+  onClone: () => void
   onRemove: () => void
 }
 
-function LineItemRow({ line, currency, onUpdate, onRemove }: LineItemRowProps) {
+function LineItemRow({ line, currency, onUpdate, onClone, onRemove }: LineItemRowProps) {
   const { data, isFetching, isError } = useQuery({
     queryKey: ['exchangeRate', currency, line.date?.toISOString()],
     queryFn: () => fetchExchangeRate(currency, line.date!),
@@ -63,7 +64,7 @@ function LineItemRow({ line, currency, onUpdate, onRemove }: LineItemRowProps) {
   const plnValue = calculatePln(line.amount, line.rate)
 
   return (
-    <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 items-center">
+    <div className="grid grid-cols-[140px_100px_180px_100px_72px] gap-2 items-center">
       <DatePicker
         value={line.date}
         onChange={(date) => {
@@ -99,14 +100,19 @@ function LineItemRow({ line, currency, onUpdate, onRemove }: LineItemRowProps) {
         )}
       </div>
       <span className="text-right font-mono">{formatPln(plnValue)}</span>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onRemove}
-        className="text-destructive hover:text-destructive"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      <div className="flex gap-1">
+        <Button variant="ghost" size="sm" onClick={onClone}>
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onRemove}
+          className="text-destructive hover:text-destructive"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }
@@ -127,6 +133,17 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
     onLinesChange(lines.filter((line) => line.id !== id))
   }
 
+  const cloneLine = (id: string) => {
+    const lineToClone = lines.find((line) => line.id === id)
+    if (lineToClone) {
+      const cloned = { ...lineToClone, id: crypto.randomUUID() }
+      const index = lines.findIndex((line) => line.id === id)
+      const newLines = [...lines]
+      newLines.splice(index + 1, 0, cloned)
+      onLinesChange(newLines)
+    }
+  }
+
   const updateLine = (id: string, updates: Partial<LineItem>) => {
     onLinesChange(
       lines.map((line) => (line.id === id ? { ...line, ...updates } : line))
@@ -140,21 +157,11 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
 
   return (
     <div className="border rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        <Button variant="outline" size="sm" onClick={addLine}>
-          <Plus className="h-4 w-4 mr-1" />
-          Dodaj
-        </Button>
-      </div>
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
 
-      {lines.length === 0 ? (
-        <p className="text-muted-foreground text-sm italic">
-          Brak wpisów. Kliknij „Dodaj", aby dodać wiersz.
-        </p>
-      ) : (
-        <div className="space-y-2">
-          <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 text-sm font-medium text-muted-foreground">
+      {lines.length > 0 && (
+        <div className="space-y-2 mb-4">
+          <div className="grid grid-cols-[140px_100px_180px_100px_72px] gap-2 text-sm font-medium text-muted-foreground">
             <span>Data</span>
             <span>Kwota</span>
             <span>Kurs (z dnia)</span>
@@ -167,10 +174,11 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
               line={line}
               currency={currency}
               onUpdate={(updates) => updateLine(line.id, updates)}
+              onClone={() => cloneLine(line.id)}
               onRemove={() => removeLine(line.id)}
             />
           ))}
-          <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 pt-2 border-t">
+          <div className="grid grid-cols-[140px_100px_180px_100px_72px] gap-2 pt-2 border-t">
             <span></span>
             <span></span>
             <span className="text-right font-medium">Suma:</span>
@@ -181,6 +189,10 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
           </div>
         </div>
       )}
+      <Button variant="outline" size="sm" onClick={addLine}>
+        <Plus className="h-4 w-4 mr-1" />
+        Dodaj
+      </Button>
     </div>
   )
 }
