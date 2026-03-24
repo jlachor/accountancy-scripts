@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -43,19 +43,22 @@ interface LineItemRowProps {
 }
 
 function LineItemRow({ line, currency, onUpdate, onRemove }: LineItemRowProps) {
-  const { isFetching, isError } = useQuery({
+  const { data, isFetching, isError } = useQuery({
     queryKey: ['exchangeRate', currency, line.date?.toISOString()],
-    queryFn: async () => {
-      const result = await fetchExchangeRate(currency, line.date!)
-      onUpdate({
-        rate: result.rate.toFixed(4),
-        rateDate: result.effectiveDate,
-      })
-      return result
-    },
+    queryFn: () => fetchExchangeRate(currency, line.date!),
     enabled: !!line.date,
     staleTime: Infinity,
   })
+
+  useEffect(() => {
+    if (data) {
+      onUpdate({
+        rate: data.rate.toFixed(4),
+        rateDate: data.effectiveDate,
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
 
   const plnValue = calculatePln(line.amount, line.rate)
 
@@ -63,7 +66,11 @@ function LineItemRow({ line, currency, onUpdate, onRemove }: LineItemRowProps) {
     <div className="grid grid-cols-[140px_100px_180px_100px_40px] gap-2 items-center">
       <DatePicker
         value={line.date}
-        onChange={(date) => onUpdate({ date, rate: '', rateDate: undefined })}
+        onChange={(date) => {
+          if (date?.getTime() !== line.date?.getTime()) {
+            onUpdate({ date, rate: '', rateDate: undefined })
+          }
+        }}
       />
       <Input
         type="number"
