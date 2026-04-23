@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, Trash2, Loader2, Copy, FileDown } from 'lucide-react'
+import { generateCurrencyToPlnPdf } from '@/lib/pdf-generators'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -242,7 +243,17 @@ export function CurrencyToPln() {
           </div>
         </div>
 
-        <Button variant="outline" onClick={() => {}}>
+        <Button
+          variant="outline"
+          onClick={() =>
+            generateCurrencyToPlnPdf({
+              usd: { title: 'USD', lines: usdLines, total: usdTotal },
+              eur: { title: 'EUR', lines: eurLines, total: eurTotal },
+              grandTotal,
+            })
+          }
+          disabled={usdLines.length === 0 && eurLines.length === 0}
+        >
           <FileDown className="h-4 w-4 mr-2" />
           Generuj PDF
         </Button>

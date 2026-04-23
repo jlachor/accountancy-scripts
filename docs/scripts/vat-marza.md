@@ -53,8 +53,17 @@ Calculation:
 - All values are displayed with 2 decimal places
 - Each calculation step shows the formula visually with labeled values
 
+## PDF Export
+
+- Click **Generuj PDF** button to download a PDF document
+- Button is disabled when inputs are empty
+- PDF contains input data summary, calculation steps (Różnica Brutto, Różnica Netto i VAT, Sprzedaż w KPiR), and final result
+- Uses embedded Roboto font for Polish character support
+- Generated via jsPDF + jspdf-autotable
+
 ## Tech Stack
 
 - React + TypeScript
 - shadcn/ui components
+- jsPDF + jspdf-autotable for PDF generation
 - No external API dependencies

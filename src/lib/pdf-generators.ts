@@ -117,3 +117,199 @@ export function generateVatMarzaPdf(data: VatMarzaData) {
 
   doc.save('vat-marza.pdf')
 }
+
+interface CurrencyToPlnLine {
+  date?: Date
+  amount: string
+  rate: string
+  rateDate?: string
+}
+
+interface CurrencyToPlnSection {
+  title: string
+  lines: CurrencyToPlnLine[]
+  total: number
+}
+
+interface CurrencyToPlnData {
+  usd: CurrencyToPlnSection
+  eur: CurrencyToPlnSection
+  grandTotal: number
+}
+
+function formatDate(date?: Date): string {
+  if (!date) return ''
+  return date.toLocaleDateString('pl-PL')
+}
+
+export function generateCurrencyToPlnPdf(data: CurrencyToPlnData) {
+  const { usd, eur, grandTotal } = data
+  const doc = createPdf()
+
+  doc.setFontSize(18)
+  doc.text('Przelicznik walut na PLN', 14, 20)
+
+  doc.setFontSize(10)
+  doc.setTextColor(100)
+  doc.text(`Wygenerowano: ${new Date().toLocaleDateString('pl-PL')}`, 14, 28)
+  doc.setTextColor(0)
+
+  let startY = 35
+
+  for (const section of [usd, eur]) {
+    if (section.lines.length === 0) continue
+
+    doc.setFontSize(14)
+    doc.text(section.title, 14, startY)
+
+    autoTable(doc, {
+      ...tableFont,
+      startY: startY + 4,
+      head: [['Data', 'Kwota', 'Kurs', 'Kurs z dnia', 'PLN']],
+      body: [
+        ...section.lines.map((line) => {
+          const pln = parseFloat(line.amount) * parseFloat(line.rate)
+          return [
+            formatDate(line.date),
+            line.amount,
+            line.rate,
+            line.rateDate ?? '',
+            isNaN(pln) ? '0.00' : formatPln(pln),
+          ]
+        }),
+        [
+          { content: 'Suma', colSpan: 4, styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+          { content: formatPln(section.total), styles: { fontStyle: 'bold' as const } },
+        ],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [60, 60, 60] },
+      columnStyles: {
+        1: { halign: 'right' },
+        2: { halign: 'right' },
+        4: { halign: 'right' },
+      },
+    })
+
+    startY = getFinalY(doc) + 12
+  }
+
+  // Grand total
+  autoTable(doc, {
+    ...tableFont,
+    startY,
+    body: [
+      [
+        { content: 'Suma całkowita (PLN)', styles: { fontStyle: 'bold' as const, fontSize: 12 } },
+        { content: formatPln(grandTotal), styles: { fontStyle: 'bold' as const, fontSize: 12, halign: 'right' as const } },
+      ],
+    ],
+    theme: 'grid',
+  })
+
+  doc.save('przelicznik-walut.pdf')
+}
+
+interface ExchangeRateDiffLine {
+  date?: Date
+  amount: string
+  rate: string
+  rateDate?: string
+  paymentDate?: Date
+  paymentRate: string
+  paymentRateDate?: string
+}
+
+interface ExchangeRateDiffSection {
+  title: string
+  lines: ExchangeRateDiffLine[]
+  total: number
+}
+
+interface ExchangeRateDiffData {
+  usd: ExchangeRateDiffSection
+  eur: ExchangeRateDiffSection
+  grandTotal: number
+}
+
+export function generateExchangeRateDiffPdf(data: ExchangeRateDiffData) {
+  const { usd, eur, grandTotal } = data
+  const doc = createPdf()
+
+  doc.setFontSize(18)
+  doc.text('Różnica kursowa', 14, 20)
+
+  doc.setFontSize(10)
+  doc.setTextColor(100)
+  doc.text(`Wygenerowano: ${new Date().toLocaleDateString('pl-PL')}`, 14, 28)
+  doc.setTextColor(0)
+
+  let startY = 35
+
+  for (const section of [usd, eur]) {
+    if (section.lines.length === 0) continue
+
+    doc.setFontSize(14)
+    doc.text(section.title, 14, startY)
+
+    autoTable(doc, {
+      ...tableFont,
+      startY: startY + 4,
+      head: [['Data faktury', 'Kurs faktury', 'Kurs z dnia', 'Kwota', 'Data zapłaty', 'Kurs zapłaty', 'Kurs z dnia', 'Wart. faktury', 'Wart. zapłaty', 'Różnica']],
+      body: [
+        ...section.lines.map((line) => {
+          const amt = parseFloat(line.amount) || 0
+          const invRate = parseFloat(line.rate) || 0
+          const payRate = parseFloat(line.paymentRate) || 0
+          const invoicePln = Math.round(amt * invRate * 100) / 100
+          const paymentPln = Math.round(amt * payRate * 100) / 100
+          const diff = Math.round(amt * (payRate - invRate) * 100) / 100
+          return [
+            formatDate(line.date),
+            line.rate,
+            line.rateDate ?? '',
+            line.amount,
+            formatDate(line.paymentDate),
+            line.paymentRate,
+            line.paymentRateDate ?? '',
+            formatPln(invoicePln),
+            formatPln(paymentPln),
+            formatPln(diff),
+          ]
+        }),
+        [
+          { content: 'Suma', colSpan: 9, styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+          { content: formatPln(section.total), styles: { fontStyle: 'bold' as const } },
+        ],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [60, 60, 60], fontSize: 7 },
+      styles: { font: 'Roboto', fontSize: 8 },
+      columnStyles: {
+        1: { halign: 'right' },
+        3: { halign: 'right' },
+        5: { halign: 'right' },
+        7: { halign: 'right' },
+        8: { halign: 'right' },
+        9: { halign: 'right' },
+      },
+    })
+
+    startY = getFinalY(doc) + 12
+  }
+
+  // Grand total
+  autoTable(doc, {
+    ...tableFont,
+    startY,
+    body: [
+      [
+        { content: 'Suma różnic kursowych (PLN)', styles: { fontStyle: 'bold' as const, fontSize: 12 } },
+        { content: formatPln(grandTotal), styles: { fontStyle: 'bold' as const, fontSize: 12, halign: 'right' as const } },
+      ],
+    ],
+    theme: 'grid',
+  })
+
+  doc.save('roznica-kursowa.pdf')
+}

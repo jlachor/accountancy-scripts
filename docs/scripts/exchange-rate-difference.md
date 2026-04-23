@@ -47,8 +47,19 @@ Accounting tool for calculating exchange rate differences that occur when the ex
 - Both rate fields are **read-only** - populated automatically from API
 - Each rate shows the actual date it was taken from (e.g., "3.8573 (2024-12-20)")
 
+## PDF Export
+
+- Click **Generuj PDF** button to download a PDF document
+- Button is disabled when no lines have been added
+- PDF contains a table per currency section with columns: Data faktury, Kurs faktury, Kurs z dnia, Kwota, Data zapłaty, Kurs zapłaty, Kurs z dnia, Wart. faktury, Wart. zapłaty, Różnica
+- Includes section subtotals and grand total
+- Uses smaller font sizes (8/7pt) to fit all 10 columns
+- Uses embedded Roboto font for Polish character support
+- Generated via jsPDF + jspdf-autotable
+
 ## Tech Stack
 - React + TypeScript
 - TanStack Query (caching, loading states)
 - shadcn/ui components
 - NBP API for exchange rates
+- jsPDF + jspdf-autotable for PDF generation
