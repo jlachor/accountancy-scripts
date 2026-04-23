@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { FileDown } from 'lucide-react'
+import { generateVatMarzaPdf } from '@/lib/pdf-generators'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 const VAT_RATES = [
@@ -29,6 +32,18 @@ export function VatMarza() {
   const sprzedazKpir = roznicaNetto + zakupNum
 
   const hasInputs = sprzedaz !== '' && zakup !== ''
+
+  const generatePdf = () => {
+    generateVatMarzaPdf({
+      sprzedaz: sprzedazNum,
+      zakup: zakupNum,
+      vatRate: vatRateNum,
+      roznicaBrutto,
+      roznicaNetto,
+      vat,
+      sprzedazKpir,
+    })
+  }
 
   return (
     <div>
@@ -180,6 +195,11 @@ export function VatMarza() {
             </div>
           </>
         )}
+
+        <Button variant="outline" onClick={generatePdf} disabled={!hasInputs}>
+          <FileDown className="h-4 w-4 mr-2" />
+          Generuj PDF
+        </Button>
       </div>
     </div>
   )

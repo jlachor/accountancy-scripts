@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Plus, Trash2, Loader2, Copy } from 'lucide-react'
+import { Plus, Trash2, Loader2, Copy, FileDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -313,6 +313,11 @@ export function ExchangeRateDifference() {
             </span>
           </div>
         </div>
+
+        <Button variant="outline" onClick={() => {}}>
+          <FileDown className="h-4 w-4 mr-2" />
+          Generuj PDF
+        </Button>
       </div>
     </div>
   )
