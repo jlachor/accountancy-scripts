@@ -12,7 +12,9 @@ interface LineItem {
   amount: string
   rate: string
   rateDate?: string
-  paymentAmount: string
+  paymentDate?: Date
+  paymentRate: string
+  paymentRateDate?: string
 }
 
 function createEmptyLine(): LineItem {
@@ -22,7 +24,9 @@ function createEmptyLine(): LineItem {
     amount: '',
     rate: '',
     rateDate: undefined,
-    paymentAmount: '',
+    paymentDate: undefined,
+    paymentRate: '',
+    paymentRateDate: undefined,
   }
 }
 
@@ -33,11 +37,12 @@ function calculatePln(amount: string, rate: string): number {
   return Math.round(amountNum * rateNum * 100) / 100
 }
 
-function calculateDifference(amount: string, rate: string, paymentAmount: string): number {
-  const calculatedPln = calculatePln(amount, rate)
-  const payment = parseFloat(paymentAmount)
-  if (isNaN(payment)) return 0
-  return Math.round((calculatedPln - payment) * 100) / 100
+function calculateDifference(amount: string, invoiceRate: string, paymentRate: string): number {
+  const amountNum = parseFloat(amount)
+  const invoiceRateNum = parseFloat(invoiceRate)
+  const paymentRateNum = parseFloat(paymentRate)
+  if (isNaN(amountNum) || isNaN(invoiceRateNum) || isNaN(paymentRateNum)) return 0
+  return Math.round(amountNum * (paymentRateNum - invoiceRateNum) * 100) / 100
 }
 
 function formatPln(value: number): string {
@@ -53,28 +58,46 @@ interface LineItemRowProps {
 }
 
 function LineItemRow({ line, currency, onUpdate, onClone, onRemove }: LineItemRowProps) {
-  const { data, isFetching, isError } = useQuery({
+  const { data: invoiceData, isFetching: invoiceFetching, isError: invoiceError } = useQuery({
     queryKey: ['exchangeRate', currency, line.date?.toISOString()],
     queryFn: () => fetchExchangeRate(currency, line.date!),
     enabled: !!line.date,
     staleTime: Infinity,
   })
 
+  const { data: paymentData, isFetching: paymentFetching, isError: paymentError } = useQuery({
+    queryKey: ['exchangeRate', currency, line.paymentDate?.toISOString()],
+    queryFn: () => fetchExchangeRate(currency, line.paymentDate!),
+    enabled: !!line.paymentDate,
+    staleTime: Infinity,
+  })
+
   useEffect(() => {
-    if (data) {
+    if (invoiceData) {
       onUpdate({
-        rate: data.rate.toFixed(4),
-        rateDate: data.effectiveDate,
+        rate: invoiceData.rate.toFixed(4),
+        rateDate: invoiceData.effectiveDate,
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [invoiceData])
 
-  const calculatedPln = calculatePln(line.amount, line.rate)
-  const difference = calculateDifference(line.amount, line.rate, line.paymentAmount)
+  useEffect(() => {
+    if (paymentData) {
+      onUpdate({
+        paymentRate: paymentData.rate.toFixed(4),
+        paymentRateDate: paymentData.effectiveDate,
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paymentData])
+
+  const invoicePln = calculatePln(line.amount, line.rate)
+  const paymentPln = calculatePln(line.amount, line.paymentRate)
+  const difference = calculateDifference(line.amount, line.rate, line.paymentRate)
 
   return (
-    <div className="grid grid-cols-[140px_100px_180px_100px_100px_100px_72px] gap-2 items-center">
+    <div className="grid grid-cols-[140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 items-center">
       <DatePicker
         value={line.date}
         onChange={(date) => {
@@ -83,23 +106,16 @@ function LineItemRow({ line, currency, onUpdate, onClone, onRemove }: LineItemRo
           }
         }}
       />
-      <Input
-        type="number"
-        step="0.01"
-        placeholder="0.00"
-        value={line.amount}
-        onChange={(e) => onUpdate({ amount: e.target.value })}
-      />
       <div className="flex items-center gap-2">
         <div className="relative">
           <Input
             type="text"
             value={line.rate}
             readOnly
-            placeholder={isFetching ? '...' : '0.0000'}
-            className={`w-24 bg-muted/50 cursor-default ${isError ? 'border-destructive' : ''}`}
+            placeholder={invoiceFetching ? '...' : '0.0000'}
+            className={`w-24 bg-muted/50 cursor-default ${invoiceError ? 'border-destructive' : ''}`}
           />
-          {isFetching && (
+          {invoiceFetching && (
             <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
           )}
         </div>
@@ -113,10 +129,38 @@ function LineItemRow({ line, currency, onUpdate, onClone, onRemove }: LineItemRo
         type="number"
         step="0.01"
         placeholder="0.00"
-        value={line.paymentAmount}
-        onChange={(e) => onUpdate({ paymentAmount: e.target.value })}
+        value={line.amount}
+        onChange={(e) => onUpdate({ amount: e.target.value })}
       />
-      <span className="text-right font-mono">{formatPln(calculatedPln)}</span>
+      <DatePicker
+        value={line.paymentDate}
+        onChange={(date) => {
+          if (date?.getTime() !== line.paymentDate?.getTime()) {
+            onUpdate({ paymentDate: date, paymentRate: '', paymentRateDate: undefined })
+          }
+        }}
+      />
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <Input
+            type="text"
+            value={line.paymentRate}
+            readOnly
+            placeholder={paymentFetching ? '...' : '0.0000'}
+            className={`w-24 bg-muted/50 cursor-default ${paymentError ? 'border-destructive' : ''}`}
+          />
+          {paymentFetching && (
+            <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+        </div>
+        {line.paymentRateDate && (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            ({line.paymentRateDate})
+          </span>
+        )}
+      </div>
+      <span className="text-right font-mono">{formatPln(invoicePln)}</span>
+      <span className="text-right font-mono">{formatPln(paymentPln)}</span>
       <span className={`text-right font-mono ${difference < 0 ? 'text-destructive' : difference > 0 ? 'text-green-600' : ''}`}>
         {formatPln(difference)}
       </span>
@@ -171,7 +215,7 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
   }
 
   const sectionTotal = lines.reduce(
-    (sum, line) => sum + calculateDifference(line.amount, line.rate, line.paymentAmount),
+    (sum, line) => sum + calculateDifference(line.amount, line.rate, line.paymentRate),
     0
   )
 
@@ -181,12 +225,14 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
 
       {lines.length > 0 && (
         <div className="space-y-2 mb-4">
-          <div className="grid grid-cols-[140px_100px_180px_100px_100px_100px_72px] gap-2 text-sm font-medium text-muted-foreground">
-            <span>Data</span>
+          <div className="grid grid-cols-[140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 text-sm font-medium text-muted-foreground">
+            <span>Data faktury</span>
+            <span>Kurs faktury (z dnia)</span>
             <span>Kwota</span>
-            <span>Kurs (z dnia)</span>
-            <span>Kwota Zapłaty</span>
-            <span>Wartość</span>
+            <span>Data zapłaty</span>
+            <span>Kurs zapłaty (z dnia)</span>
+            <span>Wart. faktury</span>
+            <span>Wart. zapłaty</span>
             <span>Różnica</span>
             <span></span>
           </div>
@@ -200,7 +246,9 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
               onRemove={() => removeLine(line.id)}
             />
           ))}
-          <div className="grid grid-cols-[140px_100px_180px_100px_100px_100px_72px] gap-2 pt-2 border-t">
+          <div className="grid grid-cols-[140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 pt-2 border-t">
+            <span></span>
+            <span></span>
             <span></span>
             <span></span>
             <span></span>
@@ -226,11 +274,11 @@ export function ExchangeRateDifference() {
   const [eurLines, setEurLines] = useState<LineItem[]>([])
 
   const usdTotal = usdLines.reduce(
-    (sum, line) => sum + calculateDifference(line.amount, line.rate, line.paymentAmount),
+    (sum, line) => sum + calculateDifference(line.amount, line.rate, line.paymentRate),
     0
   )
   const eurTotal = eurLines.reduce(
-    (sum, line) => sum + calculateDifference(line.amount, line.rate, line.paymentAmount),
+    (sum, line) => sum + calculateDifference(line.amount, line.rate, line.paymentRate),
     0
   )
   const grandTotal = usdTotal + eurTotal
@@ -239,7 +287,7 @@ export function ExchangeRateDifference() {
     <div>
       <h1 className="text-3xl font-bold mb-6">Różnica kursowa</h1>
       <p className="text-muted-foreground mb-8">
-        Oblicz różnicę kursową między wartością obliczoną a kwotą zapłaty.
+        Oblicz różnicę kursową między kursem z dnia faktury a kursem z dnia zapłaty.
       </p>
 
       <div className="space-y-6">
