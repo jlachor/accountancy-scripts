@@ -10,6 +10,7 @@ Accounting tool for calculating the correct sale value to record in KPiR when se
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
+| Numer Faktury | text | - | Invoice number (optional, for organization) |
 | Sprzedaż z Faktury | number | - | Sale amount from the invoice (PLN) |
 | Zakup z Faktury Zakupowej | number | - | Purchase amount from the purchase invoice (PLN) |
 | Stawka VAT | dropdown | 23% | VAT rate (23%, 8%, 5%, 0%) |
@@ -57,7 +58,7 @@ Calculation:
 
 - Click **Generuj PDF** button to download a PDF document
 - Button is disabled when inputs are empty
-- PDF contains input data summary, calculation steps (Różnica Brutto, Różnica Netto i VAT, Sprzedaż w KPiR), and final result
+- PDF contains invoice number (if provided), input data summary, calculation steps (Różnica Brutto, Różnica Netto i VAT, Sprzedaż w KPiR), and final result
 - Uses embedded Roboto font for Polish character support
 - Generated via jsPDF + jspdf-autotable
 

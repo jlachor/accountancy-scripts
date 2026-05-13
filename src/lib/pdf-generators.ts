@@ -10,6 +10,7 @@ function getFinalY(doc: ReturnType<typeof createPdf>): number {
 }
 
 interface VatMarzaData {
+  invoiceNumber: string
   sprzedaz: number
   zakup: number
   vatRate: number
@@ -20,7 +21,7 @@ interface VatMarzaData {
 }
 
 export function generateVatMarzaPdf(data: VatMarzaData) {
-  const { sprzedaz, zakup, vatRate, roznicaBrutto, roznicaNetto, vat, sprzedazKpir } = data
+  const { invoiceNumber, sprzedaz, zakup, vatRate, roznicaBrutto, roznicaNetto, vat, sprzedazKpir } = data
   const vatPercent = Math.round(vatRate * 100)
   const doc = createPdf()
 
@@ -38,6 +39,7 @@ export function generateVatMarzaPdf(data: VatMarzaData) {
     startY: 35,
     head: [['Dane wejściowe', 'Wartość']],
     body: [
+      ...(invoiceNumber ? [['Numer Faktury', invoiceNumber]] : []),
       ['Sprzedaż z Faktury', `${formatPln(sprzedaz)} PLN`],
       ['Zakup z Faktury Zakupowej', `${formatPln(zakup)} PLN`],
       ['Stawka VAT', `${vatPercent}%`],
@@ -119,6 +121,7 @@ export function generateVatMarzaPdf(data: VatMarzaData) {
 }
 
 interface CurrencyToPlnLine {
+  invoiceNumber: string
   date?: Date
   amount: string
   rate: string
@@ -165,11 +168,12 @@ export function generateCurrencyToPlnPdf(data: CurrencyToPlnData) {
     autoTable(doc, {
       ...tableFont,
       startY: startY + 4,
-      head: [['Data', 'Kwota', 'Kurs', 'Kurs z dnia', 'PLN']],
+      head: [['Nr faktury', 'Data', 'Kwota', 'Kurs', 'Kurs z dnia', 'PLN']],
       body: [
         ...section.lines.map((line) => {
           const pln = parseFloat(line.amount) * parseFloat(line.rate)
           return [
+            line.invoiceNumber,
             formatDate(line.date),
             line.amount,
             line.rate,
@@ -178,16 +182,16 @@ export function generateCurrencyToPlnPdf(data: CurrencyToPlnData) {
           ]
         }),
         [
-          { content: 'Suma', colSpan: 4, styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+          { content: 'Suma', colSpan: 5, styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
           { content: formatPln(section.total), styles: { fontStyle: 'bold' as const } },
         ],
       ],
       theme: 'grid',
       headStyles: { fillColor: [60, 60, 60] },
       columnStyles: {
-        1: { halign: 'right' },
         2: { halign: 'right' },
-        4: { halign: 'right' },
+        3: { halign: 'right' },
+        5: { halign: 'right' },
       },
     })
 
@@ -211,6 +215,7 @@ export function generateCurrencyToPlnPdf(data: CurrencyToPlnData) {
 }
 
 interface ExchangeRateDiffLine {
+  invoiceNumber: string
   date?: Date
   amount: string
   rate: string
@@ -255,7 +260,7 @@ export function generateExchangeRateDiffPdf(data: ExchangeRateDiffData) {
     autoTable(doc, {
       ...tableFont,
       startY: startY + 4,
-      head: [['Data faktury', 'Kurs faktury', 'Kurs z dnia', 'Kwota', 'Data zapłaty', 'Kurs zapłaty', 'Kurs z dnia', 'Wart. faktury', 'Wart. zapłaty', 'Różnica']],
+      head: [['Nr faktury', 'Data faktury', 'Kurs faktury', 'Kurs z dnia', 'Kwota', 'Data zapłaty', 'Kurs zapłaty', 'Kurs z dnia', 'Wart. faktury', 'Wart. zapłaty', 'Różnica']],
       body: [
         ...section.lines.map((line) => {
           const amt = parseFloat(line.amount) || 0
@@ -265,6 +270,7 @@ export function generateExchangeRateDiffPdf(data: ExchangeRateDiffData) {
           const paymentPln = Math.round(amt * payRate * 100) / 100
           const diff = Math.round(amt * (payRate - invRate) * 100) / 100
           return [
+            line.invoiceNumber,
             formatDate(line.date),
             line.rate,
             line.rateDate ?? '',
@@ -278,7 +284,7 @@ export function generateExchangeRateDiffPdf(data: ExchangeRateDiffData) {
           ]
         }),
         [
-          { content: 'Suma', colSpan: 9, styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
+          { content: 'Suma', colSpan: 10, styles: { halign: 'right' as const, fontStyle: 'bold' as const } },
           { content: formatPln(section.total), styles: { fontStyle: 'bold' as const } },
         ],
       ],
@@ -286,12 +292,12 @@ export function generateExchangeRateDiffPdf(data: ExchangeRateDiffData) {
       headStyles: { fillColor: [60, 60, 60], fontSize: 7 },
       styles: { font: 'Roboto', fontSize: 8 },
       columnStyles: {
-        1: { halign: 'right' },
-        3: { halign: 'right' },
-        5: { halign: 'right' },
-        7: { halign: 'right' },
+        2: { halign: 'right' },
+        4: { halign: 'right' },
+        6: { halign: 'right' },
         8: { halign: 'right' },
         9: { halign: 'right' },
+        10: { halign: 'right' },
       },
     })
 

@@ -15,6 +15,7 @@ Accounting tool for converting foreign currency transactions to PLN for bookkeep
 ### Each Line Contains
 | Field | Type | Precision | Description |
 |-------|------|-----------|-------------|
+| Numer Faktury | text | - | Invoice number (optional, for organization) |
 | Date | date | - | Transaction date (datepicker) |
 | Amount | number | 2 decimals | Amount in foreign currency |
 | Exchange Rate | number | 4 decimals | Currency rate to PLN |
@@ -43,7 +44,7 @@ Accounting tool for converting foreign currency transactions to PLN for bookkeep
 
 - Click **Generuj PDF** button to download a PDF document
 - Button is disabled when no lines have been added
-- PDF contains a table per currency section with columns: Data, Kwota, Kurs, Kurs z dnia, PLN
+- PDF contains a table per currency section with columns: Nr faktury, Data, Kwota, Kurs, Kurs z dnia, PLN
 - Includes section subtotals and grand total
 - Uses embedded Roboto font for Polish character support
 - Generated via jsPDF + jspdf-autotable

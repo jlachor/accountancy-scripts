@@ -15,6 +15,7 @@ Accounting tool for calculating exchange rate differences that occur when the ex
 ### Each Line Contains
 | Field | Type | Precision | Description |
 |-------|------|-----------|-------------|
+| Numer Faktury | text | - | Invoice number (optional, for organization) |
 | Data faktury | date | - | Invoice date (datepicker) |
 | Kurs faktury | number | 4 decimals | Exchange rate on invoice date (auto-fetched) |
 | Kwota | number | 2 decimals | Amount in foreign currency |
@@ -51,7 +52,7 @@ Accounting tool for calculating exchange rate differences that occur when the ex
 
 - Click **Generuj PDF** button to download a PDF document
 - Button is disabled when no lines have been added
-- PDF contains a table per currency section with columns: Data faktury, Kurs faktury, Kurs z dnia, Kwota, Data zapłaty, Kurs zapłaty, Kurs z dnia, Wart. faktury, Wart. zapłaty, Różnica
+- PDF contains a table per currency section with columns: Nr faktury, Data faktury, Kurs faktury, Kurs z dnia, Kwota, Data zapłaty, Kurs zapłaty, Kurs z dnia, Wart. faktury, Wart. zapłaty, Różnica
 - Includes section subtotals and grand total
 - Uses smaller font sizes (8/7pt) to fit all 10 columns
 - Uses embedded Roboto font for Polish character support

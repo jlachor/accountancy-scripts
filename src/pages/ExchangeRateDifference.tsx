@@ -9,6 +9,7 @@ import { fetchExchangeRate, type CurrencyCode } from '@/lib/nbp-api'
 
 interface LineItem {
   id: string
+  invoiceNumber: string
   date?: Date
   amount: string
   rate: string
@@ -21,6 +22,7 @@ interface LineItem {
 function createEmptyLine(): LineItem {
   return {
     id: crypto.randomUUID(),
+    invoiceNumber: '',
     date: undefined,
     amount: '',
     rate: '',
@@ -98,7 +100,13 @@ function LineItemRow({ line, currency, onUpdate, onClone, onRemove }: LineItemRo
   const difference = calculateDifference(line.amount, line.rate, line.paymentRate)
 
   return (
-    <div className="grid grid-cols-[140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 items-center">
+    <div className="grid grid-cols-[120px_140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 items-center">
+      <Input
+        type="text"
+        placeholder="Nr faktury"
+        value={line.invoiceNumber}
+        onChange={(e) => onUpdate({ invoiceNumber: e.target.value })}
+      />
       <DatePicker
         value={line.date}
         onChange={(date) => {
@@ -226,7 +234,8 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
 
       {lines.length > 0 && (
         <div className="space-y-2 mb-4">
-          <div className="grid grid-cols-[140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-[120px_140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 text-sm font-medium text-muted-foreground">
+            <span>Nr faktury</span>
             <span>Data faktury</span>
             <span>Kurs faktury (z dnia)</span>
             <span>Kwota</span>
@@ -247,7 +256,8 @@ function CurrencySection({ title, currency, lines, onLinesChange }: CurrencySect
               onRemove={() => removeLine(line.id)}
             />
           ))}
-          <div className="grid grid-cols-[140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 pt-2 border-t">
+          <div className="grid grid-cols-[120px_140px_180px_100px_140px_180px_100px_100px_100px_72px] gap-2 pt-2 border-t">
+            <span></span>
             <span></span>
             <span></span>
             <span></span>

@@ -16,6 +16,7 @@ function formatPln(value: number): string {
 }
 
 export function VatMarza() {
+  const [invoiceNumber, setInvoiceNumber] = useState('')
   const [sprzedaz, setSprzedaz] = useState('')
   const [zakup, setZakup] = useState('')
   const [vatRate, setVatRate] = useState('0.23')
@@ -35,6 +36,7 @@ export function VatMarza() {
 
   const generatePdf = () => {
     generateVatMarzaPdf({
+      invoiceNumber,
       sprzedaz: sprzedazNum,
       zakup: zakupNum,
       vatRate: vatRateNum,
@@ -57,6 +59,16 @@ export function VatMarza() {
         <div className="border rounded-lg p-4">
           <h2 className="text-xl font-semibold mb-4">Dane wejściowe</h2>
           <div className="space-y-4">
+            <div className="grid grid-cols-[240px_1fr] gap-4 items-center">
+              <label className="font-medium">Numer Faktury</label>
+              <Input
+                type="text"
+                placeholder="np. FV/2026/05/001"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                className="max-w-60"
+              />
+            </div>
             <div className="grid grid-cols-[240px_1fr] gap-4 items-center">
               <label className="font-medium">Sprzedaż z Faktury</label>
               <div className="flex items-center gap-2">
